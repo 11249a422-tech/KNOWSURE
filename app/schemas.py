@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 # knowsure = full reliability layer; rag and slm are the baselines from the evaluation plan.
 Mode = Literal["knowsure", "rag", "slm"]
@@ -16,6 +16,14 @@ Reason = Literal["supported_by_evidence", "weak_support", "partial_support", "co
 class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     mode: Mode = "knowsure"
+
+    @field_validator("question")
+    @classmethod
+    def not_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("The question is empty. Type a question to check.")
+        return value
 
 
 class EvidenceItem(BaseModel):
