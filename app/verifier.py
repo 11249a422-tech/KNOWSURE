@@ -38,15 +38,16 @@ def make_hypothesis(question: str, answer: str) -> str:
     return f'The answer to the question "{question.strip()}" is: {answer}'
 
 
-JUDGE_PROMPT = """You are a strict fact-checker. Judge each numbered evidence sentence against the claim, using only what that sentence says.
+JUDGE_PROMPT = """You are a strict fact-checker. Judge each numbered evidence sentence against the claim, using ONLY what that sentence itself says. Do not use your own knowledge, and do not fill in gaps.
 
 Claim: "{claim}"
 
 Labels:
-- supports: the sentence states that the claim is true
-- partial: the sentence supports part of the claim but not all of it
-- contradicts: the sentence states something that makes the claim false
-- neutral: the sentence is unrelated to the claim or does not settle it
+- supports: the sentence explicitly states the WHOLE claim: the same people, places, things, numbers and dates. Background, related or merely plausible information is NOT support.
+- partial: the sentence explicitly states some part of the claim, but not all of it (for example the person but not the date).
+- contradicts: the sentence explicitly states something incompatible with the claim (a different person, place, number or date for the same fact).
+- neutral: everything else, including sentences on the same topic that neither confirm nor deny the claim.
+If you are unsure, choose neutral.
 
 Evidence sentences:
 {sentences}

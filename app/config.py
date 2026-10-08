@@ -59,8 +59,15 @@ class Settings:
     wiki_full_max_chars: int = 20000
 
     # ------------------------------------------------------------ verification
-    embed_backend: str = "sentence-transformers"  # "sentence-transformers" or "fastembed"
+    # Passage ranking: "sentence-transformers" (neural, best quality), "fastembed" (same model, no PyTorch) or
+    # "lexical" (word matching: no model, ~20x faster; for tiny servers such as Render's free plan).
+    embed_backend: str = "sentence-transformers"
     embed_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    # Lexical scores run lower than neural ones, so the lexical backend uses its own thresholds and passes a few
+    # more passages to the verifier.
+    lexical_min_retrieval_score: float = 0.10
+    lexical_topic_similarity: float = 0.15
+    lexical_top_k: int = 6
     # Comma-separated verifier ensemble. "llm" = the SLM labels evidence sentences; "llm:<gemini model>" = another
     # Gemini API model does it (independent of the SLM); "nli" = the local NLI model below. Scores are averaged.
     # Examples: "llm,llm:gemini-3.6-flash" (independent judge; the free tier allows only ~20 requests/day) or
@@ -116,8 +123,9 @@ class Settings:
         return settings
 
     def validate(self) -> None:
-        if self.embed_backend not in ("sentence-transformers", "fastembed"):
-            raise ValueError(f"KNOWSURE_EMBED_BACKEND must be sentence-transformers or fastembed, got {self.embed_backend!r}")
+        if self.embed_backend not in ("sentence-transformers", "fastembed", "lexical"):
+            raise ValueError("KNOWSURE_EMBED_BACKEND must be sentence-transformers, fastembed or lexical, "
+                             f"got {self.embed_backend!r}")
         if self.conflict_decision not in ("UNCERTAIN", "UNKNOWN"):
             raise ValueError("KNOWSURE_CONFLICT_DECISION must be UNCERTAIN or UNKNOWN")
         if self.slm_provider not in SLM_PROVIDERS:

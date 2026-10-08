@@ -15,7 +15,7 @@ import re
 import threading
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -27,7 +27,8 @@ from .config import Settings
 from .consistency import ConsistencyResult, check_consistency
 from .decision import Decision, Signals, Verdict, decide
 from .generator import Generator, build_gemini, build_generator
-from .retrieval import Chunk, Embedder, FastEmbedEmbedder, SentenceTransformerEmbedder, chunk_text, top_k
+from .retrieval import (Chunk, Embedder, FastEmbedEmbedder, LexicalEmbedder, SentenceTransformerEmbedder, chunk_text,
+                        top_k)
 from .schemas import (AskResponse, ClaimResult, ConsistencyOut, EvidenceItem, Mode, ParaphraseOut, SignalsOut)
 from .verifier import (EnsembleVerifier, LLMJudgeVerifier, NLIVerifier, Verifier, make_hypothesis,
                        split_sentences)
@@ -416,8 +417,13 @@ def build_verifiers(settings: Settings, generator: Generator) -> EnsembleVerifie
 
 def build_pipeline(settings: Settings) -> KnowSure:
     generator = build_generator(settings)
-    if settings.embed_backend == "fastembed":
-        embedder: Embedder = FastEmbedEmbedder(settings.embed_model)
+    if settings.embed_backend == "lexical":
+        embedder: Embedder = LexicalEmbedder()
+        # Lexical similarity runs on a lower scale than neural similarity: use the lexical thresholds.
+        settings = replace(settings, min_retrieval_score=settings.lexical_min_retrieval_score,
+                           topic_similarity=settings.lexical_topic_similarity, top_k=settings.lexical_top_k)
+    elif settings.embed_backend == "fastembed":
+        embedder = FastEmbedEmbedder(settings.embed_model)
     else:
         embedder = SentenceTransformerEmbedder(settings.embed_model)
     return KnowSure(settings, generator, embedder,
