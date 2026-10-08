@@ -1,4 +1,4 @@
-# KnowSure — 
+# KnowSure
 
 KnowSure is a high-reliability verification dashboard for Small Language Models (SLMs). Rather than returning ungrounded answers, KnowSure enforces a strict **Generate → Retrieve → Verify → Decide** pipeline and abstains when ground-truth evidence is insufficient.
 
