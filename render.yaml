@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: knowsure
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips=*
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: KNOWSURE_STATIC_DIR
+        value: static
+      - key: KNOWSURE_EMBED_BACKEND
+        value: fastembed
+      - key: KNOWSURE_DATA_DIR
+        value: /tmp/knowsure
+      - key: KNOWSURE_LOG_RUNS
+        value: "false"
+      - key: KNOWSURE_RATE_LIMIT_PER_MINUTE
+        value: "4"
+      - key: KNOWSURE_RATE_LIMIT_PER_DAY
+        value: "40"
+      - key: KNOWSURE_GLOBAL_DAILY_LIMIT
+        value: "300"
+      - key: KNOWSURE_ADAPTIVE_FULL_ARTICLES
+        value: "1"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: KNOWSURE_WIKI_CONTACT
+        sync: false
